@@ -6,6 +6,7 @@ from utils import load_wallets, save_to_excel
 from blockchain import analyze_wallet
 
 CACHE_FILE = 'cache.json'
+WALLETS_FILE = 'wallets.txt'
 
 def load_cache():
     """Загружает кэш с диска, если файл существует."""
@@ -17,35 +18,33 @@ def load_cache():
 def save_cache(cache):
     """Сохраняет кэш на диск в формате JSON."""
     with open(CACHE_FILE, 'w') as file:
-        json.dump(cache, file, indent=4) #Добавляем отступы для удобства читать
+        json.dump(cache, file, indent=4)
 
+def input_wallets():
+    """Позволяет пользователю ввести кошельки вручную и сохраняет их в текстовый файл."""
+    print("Введите кошельки, по одному на строке. Для завершения ввода оставьте строку пустой и нажмите Enter.")
 
-async def get_wallets_file_from_user():
-    """Асинхронно запрашивает путь к файлу с кошельками у пользователя."""
+    wallets = []
+
     while True:
-        try:
-            # Запрашиваем у пользователя путь к файлу
-            filename = await asyncio.to_thread(input, "Введите путь к файлу с адресами кошельков: ")
+        wallet = input("Введите адрес кошелька: ")
+        if not wallet:
+            break
+        wallets.append(wallet)
 
-            # Отладочный вывод для проверки пути
-           # print(f"Проверяем путь: '{filename}'")
-
-            # Проверяем, существует ли файл
-            if not os.path.exists(filename):
-                print(f"Файл '{filename}' не найден. Пожалуйста, проверьте путь и повторите.")
-                continue
-
-            # Если файл найден, возвращаем имя файла
-           # print(f"Файл найден: {filename}")
-            return filename
-
-        except Exception as e:
-            print(f"Произошла ошибка: {e}. Попробуйте снова.")
-
+    if wallets:
+        with open(WALLETS_FILE, 'w') as f:
+            f.write('\n'.join(wallets))
+        print(f"{len(wallets)} кошельков сохранено в {WALLETS_FILE}.")
+    else:
+        print("Кошельки не введены.")
 
 async def main():
-    filename = await get_wallets_file_from_user()
-    wallets = load_wallets(filename)
+    # Ввод кошельков вручную
+    input_wallets()
+
+    # Загрузка кошельков из файла
+    wallets = load_wallets(WALLETS_FILE)
 
     if not wallets:
         print("Список кошельков пуст. Завершение работы.")
@@ -53,15 +52,20 @@ async def main():
 
     cache = load_cache()
 
+    # Параллельный анализ кошельков
     tasks = [analyze_wallet(wallet, cache) for wallet in wallets]
     results = await asyncio.gather(*tasks)
 
+    # Сохранение результатов в кэш
     save_cache(cache)
 
+    # Создание DataFrame для результатов
     df = pd.DataFrame(results, columns=['Address', 'Transactions', 'Networks', 'Total Fees (in WEI)'])
     print(df)
 
+    # Сохранение результатов в Excel
     save_to_excel(df, 'wallet_analysis.xlsx')
 
 if __name__ == '__main__':
     asyncio.run(main())
+
