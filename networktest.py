@@ -31,12 +31,19 @@ network_rpc_urls = {
         'https://api-moonbeam.moonscan.io/87KIVXU2TAEXPES95K8R7VDENVGVSIQNA7'
     ],
     'Optimism': [
-        'https://optimism.llamarpc.com',  # Обновленный RPC URL
-        'https://api-optimistic.etherscan.io/api/GFBDEJXEE9PTZC9XD6WNWFJPNYYWMBGWFK'
+        'https://optimism.drpc.org',  # Обновленный RPC URL
+        'https://api-optimistic.etherscan.io/api/GFBDEJXEE9PTZC9XD6WNWFJPNYYWMBGWFK',
+        'https://optimism.meowrpc.com',
+        'https://op-pokt.nodies.app'
     ],
     'Polygon': [
-        'https://polygon.llamarpc.com',  # Обновленный RPC URL
-        'https://polygon-mainnet.infura.io/v3/b83fade9f8c349ddb549c664c6929fc3'
+      # Обновленный RPC URL
+        'https://polygon-mainnet.infura.io/v3/b83fade9f8c349ddb549c664c6929fc3',
+        'https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/2023-01-09/2023-01-09?apiKey=TWrZYSMWX1ltXSwA9DM0iDzHSef6pQXu',
+        'https://polygon-bor-rpc.publicnode.com',
+        'https://polygon-pokt.nodies.app'
+
+
     ],
     'Scroll': [
         'https://1rpc.io/scroll',
@@ -71,7 +78,7 @@ def get_web3_with_rotation(network_name, max_retries=3, retry_delay=5):
                 if web3.is_connected():
                     print(f"Successfully connected to {network_name} via {url}")
 
-                    if network_name in ['Scroll', 'Celo', 'Moonbeam', 'Polygon', 'Avalanche']:#  чтобы правильно обрабатывать блоки в РОА
+                    if network_name in ['Scroll', 'Celo', 'Moonbeam', 'Polygon', 'Avalanche', 'Optimism', 'Base']:#  чтобы правильно обрабатывать блоки в РОА
                         web3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
                         print(f"Injected POA middleware for {network_name}")
 
@@ -95,3 +102,4 @@ def get_web3_for_network(network_name):
 
     web3_cache[network_name] = (time.time(), web3)
     return web3
+
